@@ -2,12 +2,12 @@
 #include  "ExtFunc/lcd.h"  // "" means local include <> external
 #include  "msp430g2432.h"
 
-#define 	OnOff_B 		BIT3		// BIT3 on P1, S2 button on Launchpad LOW to make
-#define 	Select_B 		BIT0		// BIT0 on P2, break out veroboard HIGH to make
-#define 	Inc_B 			BIT2		// BIT1 on P2, break out veroboard HIGH to make
-#define 	Dec_B 			BIT1		// BIT2 on P2, break out veroboard HIGH to make
-#define		LED				BIT3		// BIT3 on P2, LED
-#define		LED2			BIT5		// BIT5 on P2, LED
+#define 	OnOff_B 		BIT3	// BIT3 on P1, S2 button on Launchpad LOW to make
+#define 	Select_B 		BIT0	// BIT0 on P2, break out veroboard HIGH to make
+#define 	Inc_B 			BIT2	// BIT1 on P2, break out veroboard HIGH to make
+#define 	Dec_B 			BIT1	// BIT2 on P2, break out veroboard HIGH to make
+#define		LED				BIT3	// BIT3 on P2, LED
+#define		LED2			BIT5	// BIT5 on P2, LED
 
 // State definitions, states are the routine the program jumps to, these are prefixed with an 'S'
 enum states {S_OFF, S_ON, S_BRIADJ, S_PRESET, S_AUTO, S_MAX};
@@ -23,26 +23,26 @@ unsigned int	ScrRefresh = 0;		// Used to slow the screen refresh rate down
 unsigned int brightness = 5;		// variable to store brightness external to StateM
 unsigned int preset_mode = 1;		// variable to store preset mode external to StateM
 unsigned int adc;					// Used to store the ADC value
-unsigned int briadjSys = 0;			// Used as a flag when S_BRIADJ = Cyrrent_State
-unsigned int presetSys = 0;			// Used as a flag when S_PRESET = Cyrrent_State
-unsigned int autoSys = 0;			// Used as a flag when S_AUTO = Cyrrent_State
+unsigned int briadjSys = 0;			// Used as a flag when S_BRIADJ = Current_State
+unsigned int presetSys = 0;			// Used as a flag when S_PRESET = Current_State
+unsigned int autoSys = 0;			// Used as a flag when S_AUTO = Current_State
 
 void StateM(int event);		// Contains states S_OFF, S_ON, S_BRIADJ, S_PRESET, S_MAX
-int CheckButtons();  		// Generates events from button presses
+int CheckButtons();			// Generates events from button presses
 //void OnExit( int State);	// Upon exiting a state call the function
 void OnEnter( int State);	// Upon entering a new state call the function
 void Do (int State);		// While in the current state call the function
 
-int bri_adj();				// Brightness adjust function
-int preset_modes();			// Preset mode function
-void soft_PWM();			// Software PWM used in conjunction with bri_adj() function
-void preset_level();		// Software PWM used in conjunction with preset_modes() function
-void automatic();			// Starts ADC then alters value to suit soft_PWM() function
-void automatic_lcd();		// Uses integer ScrRefresh to slow the timing for the LCD
-void CustDelay();			// Custom delay approx. 500mS
-void TimeOut();				// Function returns to S_ON state after approx. 15 sec
+int bri_adj();			// Brightness adjust function
+int preset_modes();		// Preset mode function
+void soft_PWM();		// Software PWM used in conjunction with bri_adj() function
+void preset_level();	// Software PWM used in conjunction with preset_modes() function
+void automatic();		// Starts ADC then alters value to suit soft_PWM() function
+void automatic_lcd();	// Uses integer ScrRefresh to slow the timing for the LCD
+void CustDelay();		// Custom delay approx. 500mS
+void TimeOut();			// Function returns to S_ON state after approx. 15 sec
 
-int setup_HW()				// Setup HW clocks, ports etc
+int setup_HW()			// Setup HW clocks, ports etc
 {
 	WDTCTL = WDTPW + WDTHOLD;	// Stop watchdog timer
 	BCSCTL1 = CALBC1_1MHZ;		// Set range
@@ -60,8 +60,8 @@ int counter()
 {
 	TA0CCR0 = 65500;					// Count limit 137.5kHz / 65750 = 2.09, therefore interrupt triggers roughly every 478mS
 	TA0CCTL0 = CCIE;					// Enable counter interrupts
-	TA0CTL = TASSEL_2 + MC_1 + ID_3; 	// Timer A 0 with  SMCLK at 1.1MHZ / 8 =  137.5kHz, count UP
-	_BIS_SR( GIE ); 	        		// Enable interrupts
+	TA0CTL = TASSEL_2 + MC_1 + ID_3;	// Timer A 0 with  SMCLK at 1.1MHZ / 8 =  137.5kHz, count UP
+	_BIS_SR( GIE );						// Enable interrupts
 }
 
 #pragma vector=TIMER0_A0_VECTOR
@@ -86,7 +86,7 @@ int main()
 	ClearLcmScreen();			// Clear the LCM buffer
 	counter();					// Timer_A determines the time for the sysTick
 
-    while ( Current_State != S_MAX )		// Continue while Current_State is (NOT =) to S_MAX
+    while ( Current_State != S_MAX )	// Continue while Current_State is (NOT =) to S_MAX
     {
         if (sysTick == 1)
         	{
@@ -280,9 +280,9 @@ void OnEnter( int State)
 		ClearLcmScreen();
 		LcmSetCursorPosition(0,3);
 		PrintStr("SYSTEM OFF");
-    	briadjSys = 0;
-    	presetSys = 0;
-    	autoSys = 0;
+		briadjSys = 0;
+		presetSys = 0;
+		autoSys = 0;
 		break;
 	case S_ON:
 		ClearLcmScreen();
@@ -298,20 +298,20 @@ void OnEnter( int State)
 		autoSys = 0;
 		break;
 	case S_PRESET:
-    	ClearLcmScreen();
-    	LcmSetCursorPosition(0,2);
-    	PrintStr("PRESET MODES");
-    	briadjSys = 0;
-    	presetSys = 1;
-    	autoSys = 0;
+		ClearLcmScreen();
+		LcmSetCursorPosition(0,2);
+		PrintStr("PRESET MODES");
+		briadjSys = 0;
+		presetSys = 1;
+		autoSys = 0;
 		break;
 	case S_AUTO:
-    	ClearLcmScreen();
-    	LcmSetCursorPosition(0,4);
-    	PrintStr("AUTOMATIC");
-    	briadjSys = 0;
-    	presetSys = 0;
-    	autoSys = 1;
+		ClearLcmScreen();
+		LcmSetCursorPosition(0,4);
+		PrintStr("AUTOMATIC");
+		briadjSys = 0;
+		presetSys = 0;
+		autoSys = 1;
 		break;
     }
 }
@@ -580,14 +580,14 @@ void automatic_lcd()
 
    	LcmSetCursorPosition(1,12);
    	int base = 10;				// Sets the base of the conversion to 10 i.e. Decimal
-    unsigned char buffer[8];	// Buffer stores the string
+   	unsigned char buffer[8];	// Buffer stores the string
 	int counter = 4;			// ****Check this as should be 0 I think
 	itoa(adc, buffer, base);	// Itoa function call with 3 parameters
     while(buffer[counter])
-	{
+    {
     	PrintStr(buffer);  // This will print one character, the loop is used to print the whole string
     	counter++;
-    }
+	}
    	}
    	ScrRefresh = 0;		// Reset screen refresh counter to zero
 }
